@@ -43,7 +43,7 @@ If you are running this file locally (e.g., `file:///C:/...`), **the API request
 
 ## 📸 Screenshots
 
-
+![Screenshot](/image.png)
 
 ## 📄 License
 
