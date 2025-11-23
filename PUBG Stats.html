@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG Pro Stats Analyzer</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1d;
+            --panel-bg: #26262c;
+            --input-bg: #151518;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --accent: #f2a900;
+            --accent-hover: #d49400;
+            --border: #444;
+            --success: #4caf50;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { margin: 0 0 15px 0; color: var(--accent); font-size: 1.5rem; text-align: center; }
+
+        /* --- CONTROL PANEL --- */
+        .controls-container {
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label { font-size: 0.8rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
+
+        input[type="text"], input[type="password"] {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: inherit;
+            min-width: 200px;
+        }
+
+        input:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+
+        .btn {
+            background-color: #444;
+            color: white;
+            padding: 9px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover { background-color: #555; }
+        .btn-primary { background-color: var(--accent); color: #1a1a1d; }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+
+        /* --- MATCH LIST SELECTOR --- */
+        #match-list-panel {
+            display: none; /* Hidden by default */
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .match-scroller {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 5px;
+        }
+
+        .match-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .match-btn:hover { border-color: var(--text-main); color: var(--text-main); }
+        .match-btn.active { background-color: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+
+        /* --- MATCH META INFO --- */
+        .match-meta {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            min-height: 20px;
+        }
+        .match-meta span { margin: 0 10px; color: var(--text-main); }
+
+        /* --- TABLE --- */
+        .table-wrapper {
+            flex-grow: 1;
+            overflow: auto;
+            border-radius: 8px;
+            background: var(--panel-bg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1800px;
+            font-size: 0.9rem;
+        }
+
+        thead th {
+            background-color: #222;
+            color: var(--text-muted);
+            padding: 12px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid var(--border);
+        }
+        thead th:hover { color: var(--accent); background-color: #2a2a2a; }
+
+        td { padding: 10px; border-bottom: 1px solid var(--border); border-right: 1px solid #3a3a42; }
+        tbody tr:hover { background-color: #383844; }
+
+        /* Sticky Rank/Name */
+        th:nth-child(1), td:nth-child(1) {
+            position: sticky; left: 0; background-color: #2b2b32; z-index: 5;
+            width: 60px; text-align: center; border-right: 2px solid var(--border);
+        }
+        th:nth-child(2), td:nth-child(2) {
+            position: sticky; left: 60px; background-color: #2b2b32; z-index: 5;
+            font-weight: bold; color: var(--accent); border-right: 2px solid var(--border);
+            min-width: 160px;
+        }
+        thead th:nth-child(1), thead th:nth-child(2) { z-index: 20; background-color: #1a1a1d; }
+
+        /* Utilities */
+        .winner { background-color: rgba(76, 175, 80, 0.15) !important; }
+        .winner td:nth-child(1) { border-left: 4px solid var(--success); }
+        .val-high { color: #ff6b6b; font-weight: bold; }
+        .val-mid { color: #4dc4ff; }
+        
+        /* Spinner */
+        .loader {
+            display: inline-block; width: 15px; height: 15px; margin-left: 10px;
+            border: 2px solid #555; border-top: 2px solid var(--accent);
+            border-radius: 50%; animation: spin 1s linear infinite; opacity: 0;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader.active { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <h1>PUBG Pro Stats Analyzer</h1>
+
+    <!-- CONTROLS -->
+    <div class="controls-container">
+        
+        <!-- 1. API KEY -->
+        <div class="input-group">
+            <label for="apiKey">Bearer API Key</label>
+            <input type="password" id="apiKey" placeholder="e.g. eyJ0eXAiOiJKV1Qi..." 
+                   value=""> <!-- Put your key here for convenience if testing locally -->
+        </div>
+
+        <!-- 2. PLAYER SEARCH -->
+        <div class="input-group">
+            <label for="playerNick">Search Player</label>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="playerNick" placeholder="Nickname (e.g. frontez-)" value="frontez-">
+                <button class="btn btn-primary" onclick="fetchPlayerMatches()">
+                    Find <div id="spinner-player" class="loader"></div>
+                </button>
+            </div>
+        </div>
+
+        <div style="width: 1px; height: 40px; background: #444; margin: 0 10px;"></div>
+
+        <!-- 3. MANUAL / FILE -->
+        <div class="input-group">
+            <label>Direct Match ID / File</label>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="matchIdInput" placeholder="Match ID" style="width:120px;">
+                <button class="btn" onclick="fetchMatchDirect()">Load</button>
+                <label class="btn" style="margin-left: 5px;">
+                    Upload JSON <input type="file" id="fileInput" accept=".json" style="display:none;">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- MATCH SELECTOR (Visible after player search) -->
+    <div id="match-list-panel">
+        <label style="display:block; margin-bottom:5px;">Recent Matches for <span id="current-player-name" style="color:var(--accent)"></span>:</label>
+        <div class="match-scroller" id="match-buttons-container">
+            <!-- Buttons injected here -->
+        </div>
+    </div>
+
+    <!-- METADATA -->
+    <div id="match-meta" class="match-meta"></div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+        <table id="stats-table">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('rank')">Rank</th>
+                    <th onclick="sortTable('name')">Player</th>
+                    <th onclick="sortTable('kills')">Kills</th>
+                    <th onclick="sortTable('damageDealt')">Damage</th>
+                    <th onclick="sortTable('assists')">Assists</th>
+                    <th onclick="sortTable('DBNOs')">Knocks</th>
+                    <th onclick="sortTable('headshotKills')">Headshots</th>
+                    <th onclick="sortTable('longestKill')">Longest Kill</th>
+                    <th onclick="sortTable('timeSurvived')">Time Alive</th>
+                    <th onclick="sortTable('teamKills')">Team Kills</th>
+                    <th onclick="sortTable('heals')">Heals</th>
+                    <th onclick="sortTable('boosts')">Boosts</th>
+                    <th onclick="sortTable('revives')">Revives</th>
+                    <th onclick="sortTable('weaponsAcquired')">Weapons</th>
+                    <th onclick="sortTable('vehicleDestroys')">Veh. Dest.</th>
+                    <th onclick="sortTable('walkDistance')">Walk Dist.</th>
+                    <th onclick="sortTable('rideDistance')">Ride Dist.</th>
+                    <th onclick="sortTable('swimDistance')">Swim Dist.</th>
+                    <th onclick="sortTable('deathType')">Death Type</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr>
+                    <td colspan="19" style="text-align: center; padding: 30px; color: #666;">
+                        Enter an API Key and search for a Player, or Upload a File.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+<script>
+    let currentData = [];
+    let sortState = { column: 'rank', direction: 'asc' };
+
+    // --- 1. PLAYER SEARCH LOGIC ---
+    async function fetchPlayerMatches() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const nickname = document.getElementById('playerNick').value.trim();
+        const spinner = document.getElementById('spinner-player');
+
+        if (!apiKey) { alert("Please enter your Bearer API Key."); return; }
+        if (!nickname) { alert("Please enter a nickname."); return; }
+
+        spinner.classList.add('active');
+
+        const url = `https://api.pubg.com/shards/steam/players?filter[playerNames]=${nickname}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.api+json',
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+            const json = await response.json();
+            
+            // Validate response structure
+            if (!json.data || json.data.length === 0) {
+                alert("Player not found.");
+                return;
+            }
+
+            const playerData = json.data[0];
+            const matches = playerData.relationships?.matches?.data || [];
+
+            renderMatchList(playerData.attributes.name, matches);
+
+        } catch (err) {
+            console.error(err);
+            alert(`Error fetching player: ${err.message}\n(Check Console for CORS or Auth details)`);
+        } finally {
+            spinner.classList.remove('active');
+        }
+    }
+
+    function renderMatchList(playerName, matches) {
+        const container = document.getElementById('match-buttons-container');
+        const panel = document.getElementById('match-list-panel');
+        document.getElementById('current-player-name').textContent = playerName;
+        
+        container.innerHTML = '';
+        
+        if (matches.length === 0) {
+            container.innerHTML = '<span style="padding:10px;">No recent matches found.</span>';
+        } else {
+            matches.forEach(match => {
+                const btn = document.createElement('button');
+                btn.className = 'match-btn';
+                // Display partial ID for brevity
+                btn.textContent = match.id; 
+                btn.onclick = () => loadMatchData(match.id, btn);
+                container.appendChild(btn);
+            });
+        }
+        panel.style.display = 'block';
+    }
+
+    // --- 2. MATCH DATA LOGIC ---
+    
+    // Triggered by direct ID input
+    function fetchMatchDirect() {
+        const id = document.getElementById('matchIdInput').value.trim();
+        if(id) loadMatchData(id);
+    }
+
+    async function loadMatchData(matchId, clickedBtn = null) {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const tbody = document.getElementById('table-body');
+        
+        // Highlight active button
+        if (clickedBtn) {
+            document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('active'));
+            clickedBtn.classList.add('active');
+        }
+
+        tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;">Loading Match Data...</td></tr>';
+
+        // Support full URL or just ID
+        let url = matchId.startsWith('http') ? matchId : `https://api.pubg.com/shards/steam/matches/${matchId}`;
+
+        // Headers
+        const headers = { 'Accept': 'application/vnd.api+json' };
+        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+        try {
+            const response = await fetch(url, { method: 'GET', headers: headers });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const json = await response.json();
+            processAndRender(json);
+
+        } catch (err) {
+            alert("Error loading match: " + err.message);
+            tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:red;">Failed to load match.</td></tr>';
+        }
+    }
+
+    // File Upload Support
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try { processAndRender(JSON.parse(ev.target.result)); } 
+            catch (err) { alert("Invalid JSON"); }
+        };
+        reader.readAsText(file);
+    });
+
+    // --- 3. PROCESSING & RENDERING (Same as before) ---
+    function processAndRender(json) {
+        // Meta Data
+        const info = json.data.attributes;
+        const date = new Date(info.createdAt).toLocaleString();
+        const duration = Math.floor(info.duration / 60) + "m " + (info.duration % 60) + "s";
+        
+        document.getElementById('match-meta').innerHTML = `
+            <span><strong>Map:</strong> ${info.mapName}</span> | 
+            <span><strong>Mode:</strong> ${info.gameMode}</span> | 
+            <span><strong>Duration:</strong> ${duration}</span> | 
+            <span><strong>Date:</strong> ${date}</span>
+        `;
+
+        // Map Includes
+        const includedMap = {};
+        if (json.included) json.included.forEach(item => includedMap[item.id] = item);
+
+        // Build Rows
+        const rows = [];
+        const rosters = json.included.filter(item => item.type === 'roster');
+
+        rosters.forEach(roster => {
+            const rank = roster.attributes.stats.rank;
+            const participants = roster.relationships.participants.data;
+
+            participants.forEach(pRef => {
+                const pData = includedMap[pRef.id];
+                if (!pData) return;
+                const stats = pData.attributes.stats;
+                rows.push({ rank: rank, ...stats });
+            });
+        });
+
+        currentData = rows;
+        // Default sort by rank
+        sortState = { column: 'rank', direction: 'asc' };
+        renderTable();
+    }
+
+    // --- 4. SORTING ---
+    function sortTable(column) {
+        if (sortState.column === column) {
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            if (['rank', 'name', 'deathType'].includes(column)) sortState.direction = 'asc';
+            else sortState.direction = 'desc';
+            sortState.column = column;
+        }
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        // Update Headers
+        document.querySelectorAll('th').forEach(th => {
+            th.classList.remove('asc', 'desc');
+            if (th.getAttribute('onclick').includes(`'${sortState.column}'`)) {
+                th.classList.add(sortState.direction);
+            }
+        });
+
+        // Sort Data
+        currentData.sort((a, b) => {
+            let valA = a[sortState.column] || 0;
+            let valB = b[sortState.column] || 0;
+
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+
+            if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Helper formatters
+        const num = (n) => typeof n === 'number' ? parseFloat(n.toFixed(1)) : (n || 0);
+        const dist = (n) => Math.round(n || 0) + "m";
+        const time = (s) => Math.floor((s||0)/60) + ":" + (Math.floor((s||0)%60)).toString().padStart(2,'0');
+
+        currentData.forEach(row => {
+            const tr = document.createElement('tr');
+            if (row.rank === 1) tr.classList.add('winner');
+
+            tr.innerHTML = `
+                <td style="text-align:center;">#${row.rank}</td>
+                <td>${row.name || 'Unknown'}</td>
+                <td class="val-high">${row.kills}</td>
+                <td class="val-high">${Math.round(row.damageDealt)}</td>
+                <td>${row.assists}</td>
+                <td>${row.DBNOs}</td>
+                <td>${row.headshotKills}</td>
+                <td>${num(row.longestKill)}m</td>
+                <td>${time(row.timeSurvived)}</td>
+                <td>${row.teamKills}</td>
+                <td class="val-mid">${row.heals}</td>
+                <td class="val-mid">${row.boosts}</td>
+                <td>${row.revives}</td>
+                <td>${row.weaponsAcquired}</td>
+                <td>${row.vehicleDestroys}</td>
+                <td class="val-mid">${dist(row.walkDistance)}</td>
+                <td class="val-mid">${dist(row.rideDistance)}</td>
+                <td class="val-mid">${dist(row.swimDistance)}</td>
+                <td>${row.deathType || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>
