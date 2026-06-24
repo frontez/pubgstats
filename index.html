@@ -345,15 +345,19 @@
         if (!searchedPlayerName) return alert("Nickname required.");
         spinner.classList.add('active');
         try {
-            const myProxy = "https://pubg-proxy.yadeforz.workers.dev/?url=";
             const targetUrl = encodeURIComponent(`https://api.pubg.com/shards/steam/players?filter[playerNames]=${searchedPlayerName}`);
             
-            const res = await fetch(myProxy + targetUrl);
+            const res = await fetch(`/api/proxy?url=${targetUrl}`);
+            
             if (!res.ok) throw new Error(`API Error: ${res.status}`);
             const json = await res.json();
             if (!json.data || json.data.length === 0) return alert("Player not found.");
             renderMatchList(json.data[0].attributes.name, json.data[0].relationships?.matches?.data || []);
-        } catch (err) { alert(err.message); } finally { spinner.classList.remove('active'); }
+        } catch (err) { 
+            alert(err.message); 
+        } finally { 
+            spinner.classList.remove('active'); 
+        }
     }
 
     function renderMatchList(playerName, matches) {
@@ -383,10 +387,9 @@
         mapScale = 1; mapOffsetX = 0; mapOffsetY = 0;
 
         try {
-            const myProxy = "https://pubg-proxy.yadeforz.workers.dev/?url=";
             const targetUrl = encodeURIComponent(`https://api.pubg.com/shards/steam/matches/${matchId}`);
             
-            const res = await fetch(myProxy + targetUrl);
+            const res = await fetch(`/api/proxy?url=${targetUrl}`);
             
             if (!res.ok) {
                 if (res.status === 429) throw new Error("Rate limit exceeded (10 requests/min). Please wait 60 seconds.");
@@ -394,11 +397,7 @@
             }
             processAndRender(await res.json());
         } catch (err) { 
-            if (err.name === 'TypeError') {
-                alert("CORS Error / Rate Limit Hit.\nYou likely exceeded the 10 requests per minute limit.\nPlease wait 60 seconds and try again.");
-            } else {
-                alert("Error: " + err.message); 
-            }
+            alert("Error: " + err.message); 
             document.getElementById('table-body-players').innerHTML = '<tr><td colspan="14" style="text-align:center; color: var(--danger);">Failed to load match. Wait a minute and try again.</td></tr>';
         }
     }
