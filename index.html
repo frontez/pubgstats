@@ -388,7 +388,9 @@
         const headers = { 'Accept': 'application/vnd.api+json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
         try {
-            const res = await fetch(`https://api.pubg.com/shards/steam/matches/${matchId}`, { headers });
+            const myProxy = "https://pubg-proxy.yadeforz.workers.dev/?url=";
+            const targetUrl = encodeURIComponent(`https://api.pubg.com/shards/steam/matches/${matchId}`);
+            const res = await fetch(myProxy + targetUrl, { headers });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             processAndRender(await res.json());
         } catch (err) { alert("Error: " + err.message); }
