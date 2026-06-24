@@ -620,6 +620,12 @@
             let timeStr = formatTime(timeMs);
             let icon = ''; let text = ''; let typeClass = '';
 
+            if (ev._T === "LogPhaseChange" && ev.phase > 0) {
+                groupedEvents.push({ timeMs, timeStr, type: 'phase_change', phase: ev.phase });
+                lastDamageEvent = null;
+                return;
+            }
+
             if (ev._T === "LogParachuteLanding" && ev.character?.name === selectedPlayerName) {
                 icon = '🪂'; text = 'Landed on the ground';
             }
@@ -716,8 +722,18 @@
         });
 
         groupedEvents.forEach(ge => {
-            eventsFound++;
-            if (ge.type === 'damage') {
+            if (ge.type !== 'phase_change') eventsFound++;
+            
+            if (ge.type === 'phase_change') {
+                html += `
+                    <div class="timeline-event" style="align-items: center; margin: 20px 0;">
+                        <div class="timeline-time" style="padding-top: 0; font-size: 0.85rem; color: var(--text-muted);">${ge.timeStr}</div>
+                        <div style="flex-grow: 1; height: 1px; background: #444;"></div>
+                        <span style="padding: 0 10px; color: var(--text-muted); font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Phase ${ge.phase}</span>
+                        <div style="flex-grow: 1; height: 1px; background: #444;"></div>
+                    </div>
+                `;
+            } else if (ge.type === 'damage') {
                 html += `
                     <div class="timeline-event">
                         <div class="timeline-time">${ge.timeStr}</div>
