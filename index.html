@@ -176,10 +176,6 @@
 
     <div class="controls-container">
         <div class="input-group">
-            <label for="apiKey">Bearer API Key</label>
-            <input type="password" id="apiKey" placeholder="eyJ0eXAiOiJKV1Qi...">
-        </div>
-        <div class="input-group">
             <label for="playerNick">Search Player</label>
             <div style="display:flex; gap:5px;">
                 <input type="text" id="playerNick" placeholder="Nickname (e.g. frontez-)">
@@ -344,13 +340,15 @@
     }
 
     async function fetchPlayerMatches() {
-        const apiKey = document.getElementById('apiKey').value.trim();
         searchedPlayerName = document.getElementById('playerNick').value.trim();
         const spinner = document.getElementById('spinner-player');
-        if (!apiKey || !searchedPlayerName) return alert("API Key and Nickname required.");
+        if (!searchedPlayerName) return alert("Nickname required.");
         spinner.classList.add('active');
         try {
-            const res = await fetch(`https://api.pubg.com/shards/steam/players?filter[playerNames]=${searchedPlayerName}`, { headers: { 'Accept': 'application/vnd.api+json', 'Authorization': `Bearer ${apiKey}` }});
+            const myProxy = "https://pubg-proxy.yadeforz.workers.dev/?url=";
+            const targetUrl = encodeURIComponent(`https://api.pubg.com/shards/steam/players?filter[playerNames]=${searchedPlayerName}`);
+            
+            const res = await fetch(myProxy + targetUrl);
             if (!res.ok) throw new Error(`API Error: ${res.status}`);
             const json = await res.json();
             if (!json.data || json.data.length === 0) return alert("Player not found.");
@@ -378,22 +376,31 @@
     }
 
     async function loadMatchData(matchId, clickedBtn = null) {
-        const apiKey = document.getElementById('apiKey').value.trim();
         if (clickedBtn) { document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('active')); clickedBtn.classList.add('active'); }
         document.getElementById('main-tabs').style.display = 'flex';
         document.getElementById('table-body-players').innerHTML = '<tr><td colspan="14" style="text-align:center;">Loading...</td></tr>';
         
         mapScale = 1; mapOffsetX = 0; mapOffsetY = 0;
 
-        const headers = { 'Accept': 'application/vnd.api+json' };
-        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
         try {
             const myProxy = "https://pubg-proxy.yadeforz.workers.dev/?url=";
             const targetUrl = encodeURIComponent(`https://api.pubg.com/shards/steam/matches/${matchId}`);
-            const res = await fetch(myProxy + targetUrl, { headers });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            const res = await fetch(myProxy + targetUrl);
+            
+            if (!res.ok) {
+                if (res.status === 429) throw new Error("Rate limit exceeded (10 requests/min). Please wait 60 seconds.");
+                throw new Error(`HTTP ${res.status}`);
+            }
             processAndRender(await res.json());
-        } catch (err) { alert("Error: " + err.message); }
+        } catch (err) { 
+            if (err.name === 'TypeError') {
+                alert("CORS Error / Rate Limit Hit.\nYou likely exceeded the 10 requests per minute limit.\nPlease wait 60 seconds and try again.");
+            } else {
+                alert("Error: " + err.message); 
+            }
+            document.getElementById('table-body-players').innerHTML = '<tr><td colspan="14" style="text-align:center; color: var(--danger);">Failed to load match. Wait a minute and try again.</td></tr>';
+        }
     }
 
     document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -920,16 +927,14 @@
         ctx.fillText(msg, canvas.width/2, canvas.height/2);
     }
 
-    const apiKeyInput = document.getElementById('apiKey');
+    const playerNickInput = document.getElementById('playerNick');
     
-    // При загрузке страницы проверяем, есть ли сохраненный ключ
-    if (localStorage.getItem('pubg_api_key')) {
-        apiKeyInput.value = localStorage.getItem('pubg_api_key');
+    if (localStorage.getItem('playerNick')) {
+        playerNickInput.value = localStorage.getItem('playerNick');
     }
 
-    // Когда вводим новый ключ, сохраняем его
-    apiKeyInput.addEventListener('input', (e) => {
-        localStorage.setItem('pubg_api_key', e.target.value.trim());
+    playerNickInput.addEventListener('input', (e) => {
+        localStorage.setItem('playerNick', e.target.value.trim());
     });
 </script>
 </body>
