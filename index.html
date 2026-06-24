@@ -917,6 +917,18 @@
         ctx.fillStyle = '#888'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
         ctx.fillText(msg, canvas.width/2, canvas.height/2);
     }
+
+    const apiKeyInput = document.getElementById('apiKey');
+    
+    // При загрузке страницы проверяем, есть ли сохраненный ключ
+    if (localStorage.getItem('pubg_api_key')) {
+        apiKeyInput.value = localStorage.getItem('pubg_api_key');
+    }
+
+    // Когда вводим новый ключ, сохраняем его
+    apiKeyInput.addEventListener('input', (e) => {
+        localStorage.setItem('pubg_api_key', e.target.value.trim());
+    });
 </script>
 </body>
 </html>
