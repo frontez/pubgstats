@@ -49,7 +49,7 @@
             display: none; background: var(--input-bg); padding: 10px;
             border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--border);
         }
-        .match-scroller { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; }
+        .match-scroller { display: flex; flex-direction: row; overflow-x: auto; gap: 10px; padding-bottom: 5px; }
         .match-btn {
             background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-muted);
             padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0;
@@ -72,13 +72,14 @@
 
         /* --- TABLE --- */
         .table-wrapper { flex-grow: 1; overflow: auto; border-radius: 8px; background: var(--panel-bg); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        table { border-collapse: collapse; width: 100%; min-width: 1200px; font-size: 0.9rem; }
+        table { border-collapse: collapse; width: 100%; min-width: 1500px; font-size: 0.9rem; }
         thead th {
             background-color: #1a1a1d; color: var(--text-muted); padding: 12px 10px; text-align: left;
             position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; border-bottom: 2px solid var(--border);
+            white-space: nowrap;
         }
         thead th:hover { color: var(--accent); background-color: #222; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); border-right: 1px solid #3a3a42; }
+        td { padding: 10px; border-bottom: 1px solid var(--border); border-right: 1px solid #3a3a42; white-space: nowrap; }
 
         th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; background-color: #2b2b32; z-index: 5; width: 60px; text-align: center; border-right: 2px solid var(--border); }
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 60px; background-color: #2b2b32; z-index: 5; font-weight: bold; color: var(--accent); border-right: 2px solid var(--border); min-width: 160px; }
@@ -100,10 +101,10 @@
         .val-mid { color: #4dc4ff; }
 
         /* --- SHARED SIDEBAR (Map & Timeline) --- */
-        .layout-container { display: flex; flex-direction: row; height: 100%; gap: 15px; overflow: hidden; }
+        .layout-container { display: flex; flex-direction: row; height: 100%; overflow: hidden; }
         .sidebar {
             width: 260px; background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border);
-            display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+            display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; margin-right: 15px;
         }
         .sidebar-header { background: #1a1a1d; padding: 10px; font-weight: bold; text-align: center; border-bottom: 1px solid var(--border); }
         .player-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
@@ -130,9 +131,16 @@
         .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         .cross { color: #ff4c4c; font-weight: bold; font-size: 1.2rem; line-height: 1; }
 
+        /* --- RESIZER --- */
+        .resizer {
+            width: 8px; background: var(--border); cursor: col-resize; border-radius: 4px;
+            transition: 0.2s; flex-shrink: 0; margin: 0 10px; z-index: 10;
+        }
+        .resizer:hover, .resizer.active { background: var(--accent); }
+
         /* --- TIMELINE SPECIFIC --- */
         .timeline-container {
-            width: 350px; flex-shrink: 0; background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border);
+            width: 450px; flex-shrink: 0; background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border);
             overflow-y: auto; padding: 20px;
         }
         .timeline-event { display: flex; gap: 15px; margin-bottom: 12px; align-items: flex-start; }
@@ -147,6 +155,12 @@
         .timeline-content.knock { border-left-color: #FF9F1C; }
         .timeline-content.revive { border-left-color: #00BBF9; }
         .timeline-content.damage { border-left-color: #888; font-size: 0.9rem; padding: 10px 12px; }
+
+        .clickable-name {
+            color: var(--selected); font-weight: bold; cursor: pointer; padding: 1px 4px;
+            border-radius: 3px; transition: background 0.2s, color 0.2s; background: rgba(76, 201, 240, 0.1);
+        }
+        .clickable-name:hover { background: var(--selected); color: #000; }
 
         .loader {
             display: inline-block; width: 15px; height: 15px; margin-left: 10px;
@@ -202,16 +216,23 @@
             <table id="stats-table">
                 <thead>
                     <tr>
-                        <th onclick="sortTable('players', 'rank')">Rank</th>
-                        <th onclick="sortTable('players', 'name')">Player</th>
-                        <th onclick="sortTable('players', 'kills')">Kills</th>
-                        <th onclick="sortTable('players', 'damageDealt')">Damage</th>
-                        <th onclick="sortTable('players', 'assists')">Assists</th>
-                        <th onclick="sortTable('players', 'DBNOs')">Knocks</th>
-                        <th onclick="sortTable('players', 'timeSurvived')">Time Alive</th>
+                        <th onclick="sortTable('players', 'rank')">Rank ↕</th>
+                        <th onclick="sortTable('players', 'name')">Player ↕</th>
+                        <th onclick="sortTable('players', 'kills')">Kills ↕</th>
+                        <th onclick="sortTable('players', 'headshotKills')">Headshots ↕</th>
+                        <th onclick="sortTable('players', 'damageDealt')">Damage ↕</th>
+                        <th onclick="sortTable('players', 'longestKill')">Longest Kill ↕</th>
+                        <th onclick="sortTable('players', 'assists')">Assists ↕</th>
+                        <th onclick="sortTable('players', 'DBNOs')">Knocks ↕</th>
+                        <th onclick="sortTable('players', 'heals')">Heals ↕</th>
+                        <th onclick="sortTable('players', 'boosts')">Boosts ↕</th>
+                        <th onclick="sortTable('players', 'revives')">Revives ↕</th>
+                        <th onclick="sortTable('players', 'walkDistance')">Walk Dist ↕</th>
+                        <th onclick="sortTable('players', 'rideDistance')">Ride Dist ↕</th>
+                        <th onclick="sortTable('players', 'timeSurvived')">Time Alive ↕</th>
                     </tr>
                 </thead>
-                <tbody id="table-body-players"><tr><td colspan="7" style="text-align: center; padding: 30px;">Load a match to see data.</td></tr></tbody>
+                <tbody id="table-body-players"><tr><td colspan="14" style="text-align: center; padding: 30px;">Load a match to see data.</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -222,10 +243,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th onclick="sortTable('teams', 'rank')">Team Rank</th>
+                        <th onclick="sortTable('teams', 'rank')">Team Rank ↕</th>
                         <th>Roster (Players)</th>
-                        <th onclick="sortTable('teams', 'totalKills')">Total Kills</th>
-                        <th onclick="sortTable('teams', 'totalDamage')">Total Damage</th>
+                        <th onclick="sortTable('teams', 'totalKills')">Total Kills ↕</th>
+                        <th onclick="sortTable('teams', 'totalDamage')">Total Damage ↕</th>
                     </tr>
                 </thead>
                 <tbody id="table-body-teams"></tbody>
@@ -240,6 +261,7 @@
                 <div class="sidebar-header">Select Player</div>
                 <div class="player-list" id="map-player-list"></div>
             </div>
+            
             <div id="map-container">
                 <div class="map-overlay">
                     <strong>Map Legend</strong><br><br>
@@ -252,6 +274,10 @@
                 </div>
                 <canvas id="match-map" width="800" height="800"></canvas>
             </div>
+
+            <!-- SLIDER / RESIZER -->
+            <div class="resizer" id="resizer"></div>
+
             <div class="timeline-container" id="timeline-container">
                 <div style="text-align:center; color:#888; margin-top:20px;">Loading timeline...</div>
             </div>
@@ -260,7 +286,7 @@
 
 <script>
     let playersData = []; let teamsData = [];
-    let currentMapName = ""; let searchedPlayerName = ""; let selectedPlayerName = ""; 
+    let currentMapName = ""; let currentGameMode = ""; let searchedPlayerName = ""; let selectedPlayerName = ""; 
     let telemetryData = null; let mapImageCache = {}; 
 
     let mapScale = 1; let mapOffsetX = 0; let mapOffsetY = 0;
@@ -273,6 +299,7 @@
     function removeSquadHighlight() { document.querySelectorAll('.squad-highlight').forEach(tr => tr.classList.remove('squad-highlight')); }
 
     function selectPlayer(playerName) {
+        if (selectedPlayerName === playerName) return; 
         selectedPlayerName = playerName;
         
         // Update Main Table
@@ -354,7 +381,7 @@
         const apiKey = document.getElementById('apiKey').value.trim();
         if (clickedBtn) { document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('active')); clickedBtn.classList.add('active'); }
         document.getElementById('main-tabs').style.display = 'flex';
-        document.getElementById('table-body-players').innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
+        document.getElementById('table-body-players').innerHTML = '<tr><td colspan="14" style="text-align:center;">Loading...</td></tr>';
         
         mapScale = 1; mapOffsetX = 0; mapOffsetY = 0;
 
@@ -377,9 +404,11 @@
     function processAndRender(json) {
         const info = json.data.attributes;
         currentMapName = info.mapName;
+        currentGameMode = info.gameMode;
         selectedPlayerName = searchedPlayerName;
         
-        document.getElementById('match-meta').innerHTML = `<span><strong>Map:</strong> ${MAP_DICTIONARY[info.mapName]?.name || info.mapName}</span> | <span><strong>Mode:</strong> ${info.gameMode}</span> | <span><strong>Duration:</strong> ${Math.floor(info.duration/60)}m</span>`;
+        const matchDate = info.createdAt ? new Date(info.createdAt).toLocaleString() : 'Unknown Date';
+        document.getElementById('match-meta').innerHTML = `<span><strong>Date:</strong> ${matchDate}</span> | <span><strong>Map:</strong> ${MAP_DICTIONARY[info.mapName]?.name || info.mapName}</span> | <span><strong>Mode:</strong> ${info.gameMode}</span> | <span><strong>Duration:</strong> ${Math.floor(info.duration/60)}m</span>`;
 
         const includedMap = {}; let telemetryUrl = "";
         if (json.included) json.included.forEach(item => { includedMap[item.id] = item; if (item.type === 'asset' && item.attributes.name === 'telemetry') telemetryUrl = item.attributes.URL; });
@@ -402,16 +431,43 @@
             teamsData.push({ rank, teamId, totalKills: teamKills, totalDamage: teamDamage, players: teamPlayers });
         });
 
+        playersData.sort((a, b) => a.rank - b.rank);
+        teamsData.sort((a, b) => a.rank - b.rank);
+
         renderTable('players'); renderTable('teams'); renderSidebars();
 
         if (telemetryUrl) fetchTelemetry(telemetryUrl);
         else { telemetryData = null; drawEmptyMap("No telemetry available for this match."); }
     }
 
+    // --- SORTING LOGIC ---
+    let currentSort = { type: '', col: '', asc: false };
+
+    function sortTable(type, col) {
+        if (currentSort.type === type && currentSort.col === col) {
+            currentSort.asc = !currentSort.asc;
+        } else {
+            currentSort = { type, col, asc: false }; 
+            if (col === 'rank' || col === 'name') currentSort.asc = true;
+        }
+
+        let data = type === 'players' ? playersData : teamsData;
+        data.sort((a, b) => {
+            let valA = a[col]; let valB = b[col];
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            
+            if (valA < valB) return currentSort.asc ? -1 : 1;
+            if (valA > valB) return currentSort.asc ? 1 : -1;
+            return 0;
+        });
+
+        renderTable(type);
+    }
+
     function renderTable(type) {
         const tbody = document.getElementById(`table-body-${type}`); tbody.innerHTML = '';
         let data = type === 'players' ? playersData : teamsData;
-        data.sort((a, b) => a.rank - b.rank);
 
         data.forEach(row => {
             const tr = document.createElement('tr');
@@ -426,8 +482,18 @@
 
                 tr.innerHTML = `<td style="text-align:center;">#${row.rank}</td>
                     <td style="white-space: nowrap;"><span class="team-dot" style="background-color: ${teamColor};"></span>${row.name}</td>
-                    <td class="val-high">${row.kills}</td><td class="val-high">${Math.round(row.damageDealt)}</td>
-                    <td>${row.assists}</td><td>${row.DBNOs}</td><td>${Math.floor(row.timeSurvived/60)}m</td>`;
+                    <td class="val-high">${row.kills}</td>
+                    <td>${row.headshotKills || 0}</td>
+                    <td class="val-high">${Math.round(row.damageDealt)}</td>
+                    <td>${Math.round(row.longestKill || 0)}m</td>
+                    <td>${row.assists}</td>
+                    <td>${row.DBNOs}</td>
+                    <td>${row.heals || 0}</td>
+                    <td>${row.boosts || 0}</td>
+                    <td>${row.revives || 0}</td>
+                    <td>${Math.round(row.walkDistance || 0)}m</td>
+                    <td>${Math.round(row.rideDistance || 0)}m</td>
+                    <td>${Math.floor(row.timeSurvived/60)}m</td>`;
             } else {
                 tr.innerHTML = `<td style="text-align:center; font-size:1.2em;"><span class="team-dot" style="background-color: ${teamColor};"></span>#${row.rank}</td>
                     <td style="color:var(--text-muted)">${row.players.join(', ')}</td>
@@ -470,6 +536,36 @@
         finally { spinner.classList.remove('active'); }
     }
 
+    // --- RESIZER LOGIC ---
+    const resizer = document.getElementById('resizer');
+    const timelineContainer = document.getElementById('timeline-container');
+    let isResizingWidth = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizingWidth = true;
+        resizer.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none'; 
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizingWidth) return;
+        const containerRect = document.querySelector('.layout-container').getBoundingClientRect();
+        let newWidth = containerRect.right - e.clientX - 10; 
+        if (newWidth < 300) newWidth = 300; 
+        if (newWidth > 900) newWidth = 900; 
+        timelineContainer.style.width = newWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizingWidth) {
+            isResizingWidth = false;
+            resizer.classList.remove('active');
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        }
+    });
+
     // --- TIMELINE LOGIC ---
     function cleanItemName(rawName) {
         if (!rawName || rawName === 'None') return 'Unknown';
@@ -492,8 +588,21 @@
         return `${m}:${s}`;
     }
 
+    const pLink = (name) => {
+        if (!name || name === 'Bluezone/Fall' || name === 'Unknown' || name === 'Teammate') {
+            return `<strong>${name || 'Unknown'}</strong>`;
+        }
+        return `<span class="clickable-name" onclick="selectPlayer('${name}')">${name}</span>`;
+    };
+
     function renderTimeline() {
         const container = document.getElementById('timeline-container');
+        
+        if (currentGameMode && currentGameMode.toLowerCase().includes('tdm')) {
+            container.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">Timeline is not available for TDM matches.</div>';
+            return;
+        }
+
         if (!telemetryData || !selectedPlayerName) {
             container.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">Select a player to view timeline.</div>';
             return;
@@ -520,49 +629,79 @@
             else if (ev._T === "LogPlayerMakeGroggy") {
                 let w = cleanItemName(ev.damageCauserName || ev.damageReason);
                 if (ev.attacker?.name === selectedPlayerName && ev.victim?.name !== selectedPlayerName) {
-                    icon = '💥'; text = `Knocked down <strong>${ev.victim.name}</strong> [${w}]`; typeClass = 'knock';
+                    icon = '💥'; text = `Knocked down ${pLink(ev.victim.name)} [${w}]`; typeClass = 'knock';
                 } else if (ev.victim?.name === selectedPlayerName) {
-                    icon = '🩸'; text = `Knocked down by <strong>${ev.attacker?.name || 'Bluezone/Fall'}</strong> [${w}]`; typeClass = 'death';
+                    icon = '🩸'; text = `Knocked down by ${pLink(ev.attacker?.name || 'Bluezone/Fall')} [${w}]`; typeClass = 'death';
                 }
             }
             else if (ev._T === "LogPlayerRevive") {
                 if (ev.reviver?.name === selectedPlayerName) {
-                    icon = '🤝'; text = `Revived teammate <strong>${ev.victim.name}</strong>`; typeClass = 'revive';
+                    icon = '🤝'; text = `Revived teammate ${pLink(ev.victim.name)}`; typeClass = 'revive';
                 } else if (ev.victim?.name === selectedPlayerName) {
-                    icon = '❤️'; text = `Revived by <strong>${ev.reviver?.name || 'Teammate'}</strong>`; typeClass = 'revive';
+                    icon = '❤️'; text = `Revived by ${pLink(ev.reviver?.name || 'Teammate')}`; typeClass = 'revive';
                 }
+            }
+            else if (ev._T === "LogItemUse" && ev.character?.name === selectedPlayerName) {
+                if (ev.item?.itemId === "Item_BlueChipTransmitter_C") {
+                    icon = '📻'; text = `Used a Blue Chip Transmitter to recall teammates`; typeClass = 'revive';
+                }
+            }
+            else if (ev._T === "LogObjectInteraction" && ev.character?.name === selectedPlayerName) {
+                if (ev.objectType && ev.objectType.toLowerCase().includes("bluechip")) {
+                    icon = '🗼'; text = `Activated a Blue Chip Tower to recall teammates`; typeClass = 'revive';
+                }
+            }
+            else if (ev._T === "LogPlayerRedeploy" && ev.character?.name === selectedPlayerName) {
+                icon = '✈️'; text = `Redeployed into the match (Blue Chip Recall)`; typeClass = 'revive';
             }
             else if (ev._T === "LogPlayerKill") {
                 let w = cleanItemName(ev.damageCauserName || ev.damageReason);
                 if (ev.killer?.name === selectedPlayerName && ev.victim?.name !== selectedPlayerName) {
-                    icon = '🔫'; text = `Killed <strong>${ev.victim.name}</strong> [${w}]`; typeClass = 'kill';
+                    icon = '🔫'; text = `Killed ${pLink(ev.victim.name)} [${w}]`; typeClass = 'kill';
                 } else if (ev.victim?.name === selectedPlayerName) {
-                    icon = '☠️'; text = `Died to <strong>${ev.killer?.name || 'Bluezone/Fall'}</strong> [${w}]`; typeClass = 'death';
+                    icon = '☠️'; text = `Died to ${pLink(ev.killer?.name || 'Bluezone/Fall')} [${w}]`; typeClass = 'death';
                 }
             }
             else if (ev._T === "LogPlayerTakeDamage") {
                 if (ev.attacker?.name === selectedPlayerName && ev.victim?.name !== selectedPlayerName && ev.damage > 0) {
                     let w = cleanItemName(ev.damageCauserName || ev.damageReason);
                     
-                    // Умная группировка урона (если стреляем по тому же врагу из того же оружия в течение 2 секунд)
                     if (lastDamageEvent && 
                         lastDamageEvent.victim === ev.victim.name && 
                         lastDamageEvent.weapon === w && 
+                        lastDamageEvent.type === 'damage' &&
                         (timeMs - lastDamageEvent.timeMs) < 2000) {
                         
                         lastDamageEvent.damage += ev.damage;
                         lastDamageEvent.hits += 1;
-                        lastDamageEvent.timeMs = timeMs; // обновляем время последнего попадания
-                        return; // Пропускаем добавление нового события
+                        lastDamageEvent.timeMs = timeMs;
+                        return; 
                     } else {
                         lastDamageEvent = {
-                            timeMs: timeMs,
-                            timeStr: timeStr,
-                            victim: ev.victim.name,
-                            weapon: w,
-                            damage: ev.damage,
-                            hits: 1,
-                            type: 'damage'
+                            timeMs: timeMs, timeStr: timeStr, victim: ev.victim.name,
+                            weapon: w, damage: ev.damage, hits: 1, type: 'damage'
+                        };
+                        groupedEvents.push(lastDamageEvent);
+                        return;
+                    }
+                } else if (ev.victim?.name === selectedPlayerName && ev.attacker?.name !== selectedPlayerName && ev.damage > 0) {
+                    let w = cleanItemName(ev.damageCauserName || ev.damageReason);
+                    let attackerName = ev.attacker?.name || 'Bluezone/Fall';
+                    
+                    if (lastDamageEvent && 
+                        lastDamageEvent.attacker === attackerName && 
+                        lastDamageEvent.weapon === w && 
+                        lastDamageEvent.type === 'took_damage' &&
+                        (timeMs - lastDamageEvent.timeMs) < 2000) {
+                        
+                        lastDamageEvent.damage += ev.damage;
+                        lastDamageEvent.hits += 1;
+                        lastDamageEvent.timeMs = timeMs;
+                        return; 
+                    } else {
+                        lastDamageEvent = {
+                            timeMs: timeMs, timeStr: timeStr, attacker: attackerName,
+                            weapon: w, damage: ev.damage, hits: 1, type: 'took_damage'
                         };
                         groupedEvents.push(lastDamageEvent);
                         return;
@@ -571,15 +710,8 @@
             }
 
             if (text) {
-                groupedEvents.push({
-                    timeMs: timeMs,
-                    timeStr: timeStr,
-                    icon: icon,
-                    text: text,
-                    typeClass: typeClass,
-                    type: 'normal'
-                });
-                lastDamageEvent = null; // Сброс группировки при возникновении других событий
+                groupedEvents.push({ timeMs, timeStr, icon, text, typeClass, type: 'normal' });
+                lastDamageEvent = null; 
             }
         });
 
@@ -591,7 +723,18 @@
                         <div class="timeline-time">${ge.timeStr}</div>
                         <div class="timeline-icon">🎯</div>
                         <div class="timeline-content damage">
-                            Hit <strong>${ge.victim}</strong> for <span style="color:var(--accent); font-weight:bold;">${Math.round(ge.damage)} HP</span> 
+                            Hit ${pLink(ge.victim)} for <span style="color:var(--accent); font-weight:bold;">${Math.round(ge.damage)} HP</span> 
+                            <span style="font-size:0.8em; color:#aaa;">(${ge.hits} hit${ge.hits > 1 ? 's' : ''})</span> [${ge.weapon}]
+                        </div>
+                    </div>
+                `;
+            } else if (ge.type === 'took_damage') {
+                html += `
+                    <div class="timeline-event">
+                        <div class="timeline-time">${ge.timeStr}</div>
+                        <div class="timeline-icon">🛡️</div>
+                        <div class="timeline-content damage" style="border-left-color: #ff4c4c;">
+                            Took <span style="color:#ff4c4c; font-weight:bold;">${Math.round(ge.damage)} HP</span> damage from ${pLink(ge.attacker)} 
                             <span style="font-size:0.8em; color:#aaa;">(${ge.hits} hit${ge.hits > 1 ? 's' : ''})</span> [${ge.weapon}]
                         </div>
                     </div>
