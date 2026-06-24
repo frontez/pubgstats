@@ -6,504 +6,708 @@
     <title>PUBG Pro Stats Analyzer</title>
     <style>
         :root {
-            --bg-color: #1a1a1d;
-            --panel-bg: #26262c;
-            --input-bg: #151518;
-            --text-main: #e0e0e0;
-            --text-muted: #888;
-            --accent: #f2a900;
-            --accent-hover: #d49400;
-            --border: #444;
-            --success: #4caf50;
+            --bg-color: #1a1a1d; --panel-bg: #26262c; --input-bg: #151518;
+            --text-main: #e0e0e0; --text-muted: #888;
+            --accent: #f2a900; --accent-hover: #d49400;
+            --border: #444; --success: #4caf50; --danger: #ff4c4c;
+            --selected: #4cc9f0;
         }
 
         * { box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column;
         }
 
         h1 { margin: 0 0 15px 0; color: var(--accent); font-size: 1.5rem; text-align: center; }
 
-        /* --- CONTROL PANEL --- */
+        /* --- CONTROLS --- */
         .controls-container {
-            background: var(--panel-bg);
-            padding: 15px;
-            border-radius: 8px;
-            border-bottom: 2px solid var(--accent);
-            margin-bottom: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-            justify-content: center;
+            background: var(--panel-bg); padding: 15px; border-radius: 8px;
+            border-bottom: 2px solid var(--accent); margin-bottom: 15px;
+            display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; justify-content: center;
         }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 0.8rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
-
         input[type="text"], input[type="password"] {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: inherit;
-            min-width: 200px;
+            background-color: var(--input-bg); border: 1px solid var(--border);
+            color: white; padding: 8px 12px; border-radius: 4px; font-family: inherit; min-width: 200px;
         }
-
         input:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
-
         .btn {
-            background-color: #444;
-            color: white;
-            padding: 9px 18px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-            white-space: nowrap;
+            background-color: #444; color: white; padding: 9px 18px; border: none;
+            border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; white-space: nowrap;
         }
         .btn:hover { background-color: #555; }
         .btn-primary { background-color: var(--accent); color: #1a1a1d; }
         .btn-primary:hover { background-color: var(--accent-hover); }
 
-        /* --- MATCH LIST SELECTOR --- */
+        /* --- MATCH LIST --- */
         #match-list-panel {
-            display: none; /* Hidden by default */
-            background: var(--input-bg);
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
+            display: none; background: var(--input-bg); padding: 10px;
+            border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--border);
         }
-
-        .match-scroller {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding-bottom: 5px;
-        }
-
+        .match-scroller { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; }
         .match-btn {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            flex-shrink: 0;
+            background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-muted);
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0;
         }
         .match-btn:hover { border-color: var(--text-main); color: var(--text-main); }
         .match-btn.active { background-color: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
 
-        /* --- MATCH META INFO --- */
-        .match-meta {
-            text-align: center;
-            margin-bottom: 10px;
-            color: var(--text-muted);
-            font-size: 0.9em;
-            min-height: 20px;
-        }
+        .match-meta { text-align: center; margin-bottom: 10px; color: var(--text-muted); font-size: 0.9em; min-height: 20px; }
         .match-meta span { margin: 0 10px; color: var(--text-main); }
 
+        /* --- TABS --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; }
+        .tab-btn {
+            background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-muted);
+            padding: 10px 20px; border-radius: 4px 4px 0 0; cursor: pointer; font-weight: bold;
+        }
+        .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .tab-content { display: none; flex-grow: 1; overflow: hidden; flex-direction: column; }
+        .tab-content.active { display: flex; }
+
         /* --- TABLE --- */
-        .table-wrapper {
-            flex-grow: 1;
-            overflow: auto;
-            border-radius: 8px;
-            background: var(--panel-bg);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            min-width: 1800px;
-            font-size: 0.9rem;
-        }
-
+        .table-wrapper { flex-grow: 1; overflow: auto; border-radius: 8px; background: var(--panel-bg); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        table { border-collapse: collapse; width: 100%; min-width: 1200px; font-size: 0.9rem; }
         thead th {
-            background-color: #222;
-            color: var(--text-muted);
-            padding: 12px 10px;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            cursor: pointer;
-            user-select: none;
-            border-bottom: 2px solid var(--border);
+            background-color: #1a1a1d; color: var(--text-muted); padding: 12px 10px; text-align: left;
+            position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; border-bottom: 2px solid var(--border);
         }
-        thead th:hover { color: var(--accent); background-color: #2a2a2a; }
-
+        thead th:hover { color: var(--accent); background-color: #222; }
         td { padding: 10px; border-bottom: 1px solid var(--border); border-right: 1px solid #3a3a42; }
-        tbody tr:hover { background-color: #383844; }
 
-        /* Sticky Rank/Name */
-        th:nth-child(1), td:nth-child(1) {
-            position: sticky; left: 0; background-color: #2b2b32; z-index: 5;
-            width: 60px; text-align: center; border-right: 2px solid var(--border);
-        }
-        th:nth-child(2), td:nth-child(2) {
-            position: sticky; left: 60px; background-color: #2b2b32; z-index: 5;
-            font-weight: bold; color: var(--accent); border-right: 2px solid var(--border);
-            min-width: 160px;
-        }
+        th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; background-color: #2b2b32; z-index: 5; width: 60px; text-align: center; border-right: 2px solid var(--border); }
+        th:nth-child(2), td:nth-child(2) { position: sticky; left: 60px; background-color: #2b2b32; z-index: 5; font-weight: bold; color: var(--accent); border-right: 2px solid var(--border); min-width: 160px; }
         thead th:nth-child(1), thead th:nth-child(2) { z-index: 20; background-color: #1a1a1d; }
 
-        /* Utilities */
-        .winner { background-color: rgba(76, 175, 80, 0.15) !important; }
-        .winner td:nth-child(1) { border-left: 4px solid var(--success); }
+        tbody tr:nth-child(even) { background-color: #202025; }
+        tbody tr:nth-child(even) td:nth-child(1), tbody tr:nth-child(even) td:nth-child(2) { background-color: #25252b; }
+        tbody tr:hover { background-color: #383844 !important; transition: 0.1s; cursor: pointer; }
+        tbody tr:hover td:nth-child(1), tbody tr:hover td:nth-child(2) { background-color: #383844 !important; transition: 0.1s; }
+        
+        tbody tr.squad-highlight { background-color: rgba(242, 169, 0, 0.15) !important; }
+        tbody tr.squad-highlight td:nth-child(1), tbody tr.squad-highlight td:nth-child(2) { background-color: #3d3522 !important; }
+
+        tbody tr.selected-player { background-color: rgba(76, 201, 240, 0.25) !important; }
+        tbody tr.selected-player td:nth-child(1), tbody tr.selected-player td:nth-child(2) { background-color: #21333d !important; border-left: 4px solid var(--selected); }
+
+        .team-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; border: 1px solid rgba(255,255,255,0.3); vertical-align: middle; }
         .val-high { color: #ff6b6b; font-weight: bold; }
         .val-mid { color: #4dc4ff; }
-        
-        /* Spinner */
+
+        /* --- SHARED SIDEBAR (Map & Timeline) --- */
+        .layout-container { display: flex; flex-direction: row; height: 100%; gap: 15px; overflow: hidden; }
+        .sidebar {
+            width: 260px; background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+        }
+        .sidebar-header { background: #1a1a1d; padding: 10px; font-weight: bold; text-align: center; border-bottom: 1px solid var(--border); }
+        .player-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .player-item {
+            padding: 8px 10px; background: #1a1a1d; border-radius: 4px; cursor: pointer;
+            border-left: 4px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+        }
+        .player-item:hover { background: #383844; }
+        .player-item.active { background: rgba(76, 201, 240, 0.25); border-left-color: var(--selected); }
+
+        /* --- MAP SPECIFIC --- */
+        #map-container {
+            flex-grow: 1; background: #111; border-radius: 8px; overflow: hidden; position: relative;
+            display: flex; justify-content: center; align-items: center; border: 1px solid var(--border);
+        }
+        #match-map { background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); cursor: grab; }
+        #match-map:active { cursor: grabbing; }
+
+        .map-overlay {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.85);
+            padding: 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; pointer-events: none;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .cross { color: #ff4c4c; font-weight: bold; font-size: 1.2rem; line-height: 1; }
+
+        /* --- TIMELINE SPECIFIC --- */
+        .timeline-container {
+            flex-grow: 1; background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border);
+            overflow-y: auto; padding: 20px;
+        }
+        .timeline-event { display: flex; gap: 15px; margin-bottom: 12px; align-items: flex-start; }
+        .timeline-time { font-family: monospace; color: var(--accent); font-weight: bold; width: 55px; flex-shrink: 0; padding-top: 10px; }
+        .timeline-icon { font-size: 1.5rem; padding-top: 5px; }
+        .timeline-content {
+            background: #1a1a1d; padding: 12px 15px; border-radius: 6px; flex-grow: 1;
+            border-left: 4px solid #444; font-size: 0.95rem; line-height: 1.4;
+        }
+        .timeline-content.kill { border-left-color: var(--success); }
+        .timeline-content.death { border-left-color: var(--danger); }
+        .timeline-content.knock { border-left-color: #FF9F1C; }
+        .timeline-content.revive { border-left-color: #00BBF9; }
+
         .loader {
             display: inline-block; width: 15px; height: 15px; margin-left: 10px;
-            border: 2px solid #555; border-top: 2px solid var(--accent);
-            border-radius: 50%; animation: spin 1s linear infinite; opacity: 0;
+            border: 2px solid #555; border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; opacity: 0;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loader.active { opacity: 1; }
-
     </style>
 </head>
 <body>
 
     <h1>PUBG Pro Stats Analyzer</h1>
 
-    <!-- CONTROLS -->
     <div class="controls-container">
-        
-        <!-- 1. API KEY -->
         <div class="input-group">
             <label for="apiKey">Bearer API Key</label>
-            <input type="password" id="apiKey" placeholder="e.g. eyJ0eXAiOiJKV1Qi..." 
-                   value=""> <!-- Put your key here for convenience if testing locally -->
+            <input type="password" id="apiKey" placeholder="eyJ0eXAiOiJKV1Qi...">
         </div>
-
-        <!-- 2. PLAYER SEARCH -->
         <div class="input-group">
             <label for="playerNick">Search Player</label>
             <div style="display:flex; gap:5px;">
-                <input type="text" id="playerNick" placeholder="Nickname (e.g. frontez-)" value="frontez-">
-                <button class="btn btn-primary" onclick="fetchPlayerMatches()">
-                    Find <div id="spinner-player" class="loader"></div>
-                </button>
+                <input type="text" id="playerNick" placeholder="Nickname (e.g. frontez-)">
+                <button class="btn btn-primary" onclick="fetchPlayerMatches()">Find <div id="spinner-player" class="loader"></div></button>
             </div>
         </div>
-
         <div style="width: 1px; height: 40px; background: #444; margin: 0 10px;"></div>
-
-        <!-- 3. MANUAL / FILE -->
         <div class="input-group">
             <label>Direct Match ID / File</label>
             <div style="display:flex; gap:5px;">
                 <input type="text" id="matchIdInput" placeholder="Match ID" style="width:120px;">
                 <button class="btn" onclick="fetchMatchDirect()">Load</button>
-                <label class="btn" style="margin-left: 5px;">
-                    Upload JSON <input type="file" id="fileInput" accept=".json" style="display:none;">
-                </label>
+                <label class="btn" style="margin-left: 5px;">Upload JSON <input type="file" id="fileInput" accept=".json" style="display:none;"></label>
             </div>
         </div>
     </div>
 
-    <!-- MATCH SELECTOR (Visible after player search) -->
     <div id="match-list-panel">
         <label style="display:block; margin-bottom:5px;">Recent Matches for <span id="current-player-name" style="color:var(--accent)"></span>:</label>
-        <div class="match-scroller" id="match-buttons-container">
-            <!-- Buttons injected here -->
+        <div class="match-scroller" id="match-buttons-container"></div>
+    </div>
+
+    <div id="match-meta" class="match-meta"></div>
+
+    <div class="tabs" id="main-tabs" style="display: none;">
+        <button class="tab-btn active" onclick="switchTab('players')">Players Stats</button>
+        <button class="tab-btn" onclick="switchTab('teams')">Teams (Squads)</button>
+        <button class="tab-btn" onclick="switchTab('map')">2D Map <div id="spinner-map" class="loader"></div></button>
+        <button class="tab-btn" onclick="switchTab('timeline')">Timeline (Events)</button>
+    </div>
+
+    <!-- TAB 1: PLAYERS -->
+    <div id="tab-players" class="tab-content active">
+        <div class="table-wrapper">
+            <table id="stats-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('players', 'rank')">Rank</th>
+                        <th onclick="sortTable('players', 'name')">Player</th>
+                        <th onclick="sortTable('players', 'kills')">Kills</th>
+                        <th onclick="sortTable('players', 'damageDealt')">Damage</th>
+                        <th onclick="sortTable('players', 'assists')">Assists</th>
+                        <th onclick="sortTable('players', 'DBNOs')">Knocks</th>
+                        <th onclick="sortTable('players', 'timeSurvived')">Time Alive</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body-players"><tr><td colspan="7" style="text-align: center; padding: 30px;">Load a match to see data.</td></tr></tbody>
+            </table>
         </div>
     </div>
 
-    <!-- METADATA -->
-    <div id="match-meta" class="match-meta"></div>
+    <!-- TAB 2: TEAMS -->
+    <div id="tab-teams" class="tab-content">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('teams', 'rank')">Team Rank</th>
+                        <th>Roster (Players)</th>
+                        <th onclick="sortTable('teams', 'totalKills')">Total Kills</th>
+                        <th onclick="sortTable('teams', 'totalDamage')">Total Damage</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body-teams"></tbody>
+            </table>
+        </div>
+    </div>
 
-    <!-- TABLE -->
-    <div class="table-wrapper">
-        <table id="stats-table">
-            <thead>
-                <tr>
-                    <th onclick="sortTable('rank')">Rank</th>
-                    <th onclick="sortTable('name')">Player</th>
-                    <th onclick="sortTable('kills')">Kills</th>
-                    <th onclick="sortTable('damageDealt')">Damage</th>
-                    <th onclick="sortTable('assists')">Assists</th>
-                    <th onclick="sortTable('DBNOs')">Knocks</th>
-                    <th onclick="sortTable('headshotKills')">Headshots</th>
-                    <th onclick="sortTable('longestKill')">Longest Kill</th>
-                    <th onclick="sortTable('timeSurvived')">Time Alive</th>
-                    <th onclick="sortTable('teamKills')">Team Kills</th>
-                    <th onclick="sortTable('heals')">Heals</th>
-                    <th onclick="sortTable('boosts')">Boosts</th>
-                    <th onclick="sortTable('revives')">Revives</th>
-                    <th onclick="sortTable('weaponsAcquired')">Weapons</th>
-                    <th onclick="sortTable('vehicleDestroys')">Veh. Dest.</th>
-                    <th onclick="sortTable('walkDistance')">Walk Dist.</th>
-                    <th onclick="sortTable('rideDistance')">Ride Dist.</th>
-                    <th onclick="sortTable('swimDistance')">Swim Dist.</th>
-                    <th onclick="sortTable('deathType')">Death Type</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <tr>
-                    <td colspan="19" style="text-align: center; padding: 30px; color: #666;">
-                        Enter an API Key and search for a Player, or Upload a File.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- TAB 3: MAP -->
+    <div id="tab-map" class="tab-content">
+        <div class="layout-container">
+            <div class="sidebar">
+                <div class="sidebar-header">Select Player</div>
+                <div class="player-list" id="map-player-list"></div>
+            </div>
+            <div id="map-container">
+                <div class="map-overlay">
+                    <strong>Map Legend</strong><br><br>
+                    <div class="legend-item"><span class="dot" style="background: #00BBF9; border: 2px solid white;"></span> Drop Point</div>
+                    <div class="legend-item"><span class="dot" style="background: yellow;"></span> Route</div>
+                    <div class="legend-item"><span class="dot" style="background: #FF9F1C; border: 2px solid black;"></span> Knocks</div>
+                    <div class="legend-item"><span class="dot" style="background: #4caf50; border: 2px solid black;"></span> Kills</div>
+                    <div class="legend-item"><span class="cross">✖</span> Death Point</div>
+                    <div style="margin-top: 10px; font-size: 0.75rem; color: #aaa;">Scroll to Zoom. Drag to Pan.</div>
+                </div>
+                <canvas id="match-map" width="800" height="800"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: TIMELINE (NEW) -->
+    <div id="tab-timeline" class="tab-content">
+        <div class="layout-container">
+            <div class="sidebar">
+                <div class="sidebar-header">Select Player</div>
+                <div class="player-list" id="timeline-player-list"></div>
+            </div>
+            <div class="timeline-container" id="timeline-container">
+                <div style="text-align:center; color:#888; margin-top:20px;">Loading timeline...</div>
+            </div>
+        </div>
     </div>
 
 <script>
-    let currentData = [];
-    let sortState = { column: 'rank', direction: 'asc' };
+    let playersData = []; let teamsData = [];
+    let currentMapName = ""; let searchedPlayerName = ""; let selectedPlayerName = ""; 
+    let telemetryData = null; let mapImageCache = {}; 
 
-    // --- 1. PLAYER SEARCH LOGIC ---
+    let mapScale = 1; let mapOffsetX = 0; let mapOffsetY = 0;
+    let isDragging = false; let dragStartX = 0; let dragStartY = 0;
+
+    const TEAM_COLORS = ['#FF6B6B', '#4ECDC4', '#C7F464', '#FFA07A', '#88D8B0', '#FF9F1C', '#2EC4B6', '#E71D36', '#9B5DE5', '#F15BB5', '#00BBF9', '#00F5D4', '#FEE440', '#F72585', '#7209B7', '#3A0CA3', '#4361EE', '#4CC9F0', '#4D908E', '#F9C74F'];
+    function getTeamColor(teamId) { return TEAM_COLORS[Math.max(0, (teamId ? parseInt(teamId) : 1) - 1) % TEAM_COLORS.length]; }
+
+    function highlightSquad(teamId) { if(teamId) document.querySelectorAll(`tr[data-team-id="${teamId}"]`).forEach(tr => tr.classList.add('squad-highlight')); }
+    function removeSquadHighlight() { document.querySelectorAll('.squad-highlight').forEach(tr => tr.classList.remove('squad-highlight')); }
+
+    function selectPlayer(playerName) {
+        selectedPlayerName = playerName;
+        
+        // Update Main Table
+        document.querySelectorAll('#table-body-players tr').forEach(tr => {
+            if (tr.dataset.playerName === playerName) tr.classList.add('selected-player');
+            else tr.classList.remove('selected-player');
+        });
+        
+        // Update both sidebars (Map and Timeline)
+        document.querySelectorAll('.player-item').forEach(div => {
+            if (div.dataset.playerName === playerName) div.classList.add('active');
+            else div.classList.remove('active');
+        });
+
+        if (telemetryData) {
+            renderMap();
+            renderTimeline();
+        }
+    }
+
+    const MAP_DICTIONARY = {
+        "Baltic_Main": { name: "Erangel", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Erangel_Main_Low_Res.png" },
+        "Desert_Main": { name: "Miramar", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Miramar_Main_Low_Res.png" },
+        "Savage_Main": { name: "Sanhok", size: 408000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Sanhok_Main_Low_Res.png" },
+        "DihorOtok_Main": { name: "Vikendi", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Vikendi_Main_Low_Res.png" },
+        "Summerland_Main": { name: "Karakin", size: 204000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Karakin_Main_Low_Res.png" },
+        "Tiger_Main": { name: "Taego", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Taego_Main_Low_Res.png" },
+        "Kiki_Main": { name: "Deston", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Deston_Main_Low_Res.png" },
+        "Neon_Main": { name: "Rondo", size: 816000, url: "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Rondo_Main_Low_Res.png" }
+    };
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        
+        if(tabId === 'map' && telemetryData) renderMap();
+        if(tabId === 'timeline' && telemetryData) renderTimeline();
+    }
+
     async function fetchPlayerMatches() {
         const apiKey = document.getElementById('apiKey').value.trim();
-        const nickname = document.getElementById('playerNick').value.trim();
+        searchedPlayerName = document.getElementById('playerNick').value.trim();
         const spinner = document.getElementById('spinner-player');
-
-        if (!apiKey) { alert("Please enter your Bearer API Key."); return; }
-        if (!nickname) { alert("Please enter a nickname."); return; }
-
+        if (!apiKey || !searchedPlayerName) return alert("API Key and Nickname required.");
         spinner.classList.add('active');
-
-        const url = `https://api.pubg.com/shards/steam/players?filter[playerNames]=${nickname}`;
-
         try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/vnd.api+json',
-                    'Authorization': `Bearer ${apiKey}`
-                }
-            });
-
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-            const json = await response.json();
-            
-            // Validate response structure
-            if (!json.data || json.data.length === 0) {
-                alert("Player not found.");
-                return;
-            }
-
-            const playerData = json.data[0];
-            const matches = playerData.relationships?.matches?.data || [];
-
-            renderMatchList(playerData.attributes.name, matches);
-
-        } catch (err) {
-            console.error(err);
-            alert(`Error fetching player: ${err.message}\n(Check Console for CORS or Auth details)`);
-        } finally {
-            spinner.classList.remove('active');
-        }
+            const res = await fetch(`https://api.pubg.com/shards/steam/players?filter[playerNames]=${searchedPlayerName}`, { headers: { 'Accept': 'application/vnd.api+json', 'Authorization': `Bearer ${apiKey}` }});
+            if (!res.ok) throw new Error(`API Error: ${res.status}`);
+            const json = await res.json();
+            if (!json.data || json.data.length === 0) return alert("Player not found.");
+            renderMatchList(json.data[0].attributes.name, json.data[0].relationships?.matches?.data || []);
+        } catch (err) { alert(err.message); } finally { spinner.classList.remove('active'); }
     }
 
     function renderMatchList(playerName, matches) {
         const container = document.getElementById('match-buttons-container');
-        const panel = document.getElementById('match-list-panel');
         document.getElementById('current-player-name').textContent = playerName;
-        
-        container.innerHTML = '';
-        
-        if (matches.length === 0) {
-            container.innerHTML = '<span style="padding:10px;">No recent matches found.</span>';
-        } else {
-            matches.forEach(match => {
-                const btn = document.createElement('button');
-                btn.className = 'match-btn';
-                // Display partial ID for brevity
-                btn.textContent = match.id; 
-                btn.onclick = () => loadMatchData(match.id, btn);
-                container.appendChild(btn);
-            });
-        }
-        panel.style.display = 'block';
+        container.innerHTML = matches.length ? '' : '<span>No matches found.</span>';
+        matches.forEach(match => {
+            const btn = document.createElement('button');
+            btn.className = 'match-btn'; btn.textContent = match.id.substring(0,8)+'...'; 
+            btn.onclick = () => loadMatchData(match.id, btn);
+            container.appendChild(btn);
+        });
+        document.getElementById('match-list-panel').style.display = 'block';
     }
 
-    // --- 2. MATCH DATA LOGIC ---
-    
-    // Triggered by direct ID input
     function fetchMatchDirect() {
         const id = document.getElementById('matchIdInput').value.trim();
+        searchedPlayerName = document.getElementById('playerNick').value.trim();
         if(id) loadMatchData(id);
     }
 
     async function loadMatchData(matchId, clickedBtn = null) {
         const apiKey = document.getElementById('apiKey').value.trim();
-        const tbody = document.getElementById('table-body');
+        if (clickedBtn) { document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('active')); clickedBtn.classList.add('active'); }
+        document.getElementById('main-tabs').style.display = 'flex';
+        document.getElementById('table-body-players').innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
         
-        // Highlight active button
-        if (clickedBtn) {
-            document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('active'));
-            clickedBtn.classList.add('active');
-        }
+        mapScale = 1; mapOffsetX = 0; mapOffsetY = 0;
 
-        tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;">Loading Match Data...</td></tr>';
-
-        // Support full URL or just ID
-        let url = matchId.startsWith('http') ? matchId : `https://api.pubg.com/shards/steam/matches/${matchId}`;
-
-        // Headers
         const headers = { 'Accept': 'application/vnd.api+json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
         try {
-            const response = await fetch(url, { method: 'GET', headers: headers });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const json = await response.json();
-            processAndRender(json);
-
-        } catch (err) {
-            alert("Error loading match: " + err.message);
-            tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:red;">Failed to load match.</td></tr>';
-        }
+            const res = await fetch(`https://api.pubg.com/shards/steam/matches/${matchId}`, { headers });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            processAndRender(await res.json());
+        } catch (err) { alert("Error: " + err.message); }
     }
 
-    // File Upload Support
     document.getElementById('fileInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => {
-            try { processAndRender(JSON.parse(ev.target.result)); } 
-            catch (err) { alert("Invalid JSON"); }
-        };
+        reader.onload = (ev) => { try { processAndRender(JSON.parse(ev.target.result)); } catch (err) { alert("Invalid JSON"); } };
         reader.readAsText(file);
     });
 
-    // --- 3. PROCESSING & RENDERING (Same as before) ---
     function processAndRender(json) {
-        // Meta Data
         const info = json.data.attributes;
-        const date = new Date(info.createdAt).toLocaleString();
-        const duration = Math.floor(info.duration / 60) + "m " + (info.duration % 60) + "s";
+        currentMapName = info.mapName;
+        selectedPlayerName = searchedPlayerName;
         
-        document.getElementById('match-meta').innerHTML = `
-            <span><strong>Map:</strong> ${info.mapName}</span> | 
-            <span><strong>Mode:</strong> ${info.gameMode}</span> | 
-            <span><strong>Duration:</strong> ${duration}</span> | 
-            <span><strong>Date:</strong> ${date}</span>
-        `;
+        document.getElementById('match-meta').innerHTML = `<span><strong>Map:</strong> ${MAP_DICTIONARY[info.mapName]?.name || info.mapName}</span> | <span><strong>Mode:</strong> ${info.gameMode}</span> | <span><strong>Duration:</strong> ${Math.floor(info.duration/60)}m</span>`;
 
-        // Map Includes
-        const includedMap = {};
-        if (json.included) json.included.forEach(item => includedMap[item.id] = item);
+        const includedMap = {}; let telemetryUrl = "";
+        if (json.included) json.included.forEach(item => { includedMap[item.id] = item; if (item.type === 'asset' && item.attributes.name === 'telemetry') telemetryUrl = item.attributes.URL; });
 
-        // Build Rows
-        const rows = [];
+        playersData = []; teamsData = [];
         const rosters = json.included.filter(item => item.type === 'roster');
-
+        
         rosters.forEach(roster => {
-            const rank = roster.attributes.stats.rank;
+            const rank = roster.attributes.stats.rank; const teamId = roster.attributes.stats.teamId;
             const participants = roster.relationships.participants.data;
+            let teamKills = 0, teamDamage = 0; let teamPlayers = [];
 
             participants.forEach(pRef => {
-                const pData = includedMap[pRef.id];
-                if (!pData) return;
+                const pData = includedMap[pRef.id]; if (!pData) return;
                 const stats = pData.attributes.stats;
-                rows.push({ rank: rank, ...stats });
+                playersData.push({ rank, teamId, ...stats });
+                teamKills += stats.kills; teamDamage += stats.damageDealt;
+                teamPlayers.push(`${stats.name} (${stats.kills}K)`);
             });
+            teamsData.push({ rank, teamId, totalKills: teamKills, totalDamage: teamDamage, players: teamPlayers });
         });
 
-        currentData = rows;
-        // Default sort by rank
-        sortState = { column: 'rank', direction: 'asc' };
-        renderTable();
+        renderTable('players'); renderTable('teams'); renderSidebars();
+
+        if (telemetryUrl) fetchTelemetry(telemetryUrl);
+        else { telemetryData = null; drawEmptyMap("No telemetry available for this match."); }
     }
 
-    // --- 4. SORTING ---
-    function sortTable(column) {
-        if (sortState.column === column) {
-            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            if (['rank', 'name', 'deathType'].includes(column)) sortState.direction = 'asc';
-            else sortState.direction = 'desc';
-            sortState.column = column;
+    function renderTable(type) {
+        const tbody = document.getElementById(`table-body-${type}`); tbody.innerHTML = '';
+        let data = type === 'players' ? playersData : teamsData;
+        data.sort((a, b) => a.rank - b.rank);
+
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            if (row.rank === 1) tr.classList.add('winner');
+            const teamColor = getTeamColor(row.teamId);
+
+            if (type === 'players') {
+                tr.setAttribute('data-team-id', row.teamId); tr.setAttribute('data-player-name', row.name);
+                if (row.name === selectedPlayerName) tr.classList.add('selected-player');
+                tr.onmouseenter = () => highlightSquad(row.teamId); tr.onmouseleave = () => removeSquadHighlight();
+                tr.onclick = () => selectPlayer(row.name);
+
+                tr.innerHTML = `<td style="text-align:center;">#${row.rank}</td>
+                    <td style="white-space: nowrap;"><span class="team-dot" style="background-color: ${teamColor};"></span>${row.name}</td>
+                    <td class="val-high">${row.kills}</td><td class="val-high">${Math.round(row.damageDealt)}</td>
+                    <td>${row.assists}</td><td>${row.DBNOs}</td><td>${Math.floor(row.timeSurvived/60)}m</td>`;
+            } else {
+                tr.innerHTML = `<td style="text-align:center; font-size:1.2em;"><span class="team-dot" style="background-color: ${teamColor};"></span>#${row.rank}</td>
+                    <td style="color:var(--text-muted)">${row.players.join(', ')}</td>
+                    <td class="val-high" style="font-size:1.1em;">${row.totalKills}</td><td class="val-high">${Math.round(row.totalDamage)}</td>`;
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderSidebars() {
+        const mapList = document.getElementById('map-player-list');
+        const timelineList = document.getElementById('timeline-player-list');
+        mapList.innerHTML = ''; timelineList.innerHTML = '';
+        
+        let sortedPlayers = [...playersData].sort((a, b) => a.teamId - b.teamId);
+
+        sortedPlayers.forEach(p => {
+            const html = `
+                <div><span class="team-dot" style="background-color: ${getTeamColor(p.teamId)};"></span>${p.name}</div>
+                <div style="color:var(--text-muted); font-size:0.8rem;">${p.kills} K | ${p.DBNOs} KN</div>
+            `;
+            
+            const divMap = document.createElement('div');
+            divMap.className = 'player-item'; divMap.dataset.playerName = p.name;
+            if(p.name === selectedPlayerName) divMap.classList.add('active');
+            divMap.onclick = () => selectPlayer(p.name);
+            divMap.innerHTML = html;
+            mapList.appendChild(divMap);
+
+            const divTime = document.createElement('div');
+            divTime.className = 'player-item'; divTime.dataset.playerName = p.name;
+            if(p.name === selectedPlayerName) divTime.classList.add('active');
+            divTime.onclick = () => selectPlayer(p.name);
+            divTime.innerHTML = html;
+            timelineList.appendChild(divTime);
+        });
+    }
+
+    async function fetchTelemetry(url) {
+        const spinner = document.getElementById('spinner-map'); spinner.classList.add('active');
+        try {
+            const res = await fetch(url); telemetryData = await res.json();
+            if(document.getElementById('tab-map').classList.contains('active')) renderMap();
+            if(document.getElementById('tab-timeline').classList.contains('active')) renderTimeline();
+        } catch (err) { drawEmptyMap("Failed to load telemetry data."); } 
+        finally { spinner.classList.remove('active'); }
+    }
+
+    // --- TIMELINE LOGIC ---
+    function cleanItemName(rawName) {
+        return rawName.replace(/^Item_/, '').replace(/_C$/, '')
+            .replace(/Weapon_/, '').replace(/Armor_/, '').replace(/Backpack_/, '').replace(/Head_/, '')
+            .replace(/_/g, ' ');
+    }
+
+    function formatTime(ms) {
+        let totalSeconds = Math.floor(ms / 1000);
+        let m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        let s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function renderTimeline() {
+        const container = document.getElementById('timeline-container');
+        if (!telemetryData || !selectedPlayerName) {
+            container.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">Select a player to view timeline.</div>';
+            return;
         }
-        renderTable();
-    }
 
-    function renderTable() {
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '';
+        const matchStartTime = new Date(telemetryData[0]._D).getTime();
+        let html = `<h2 style="margin-top:0; color:var(--accent); margin-bottom: 20px;">Match Timeline: ${selectedPlayerName}</h2>`;
+        let eventsFound = 0;
 
-        // Update Headers
-        document.querySelectorAll('th').forEach(th => {
-            th.classList.remove('asc', 'desc');
-            if (th.getAttribute('onclick').includes(`'${sortState.column}'`)) {
-                th.classList.add(sortState.direction);
+        telemetryData.forEach(ev => {
+            let timeStr = formatTime(new Date(ev._D).getTime() - matchStartTime);
+            let icon = ''; let text = ''; let typeClass = '';
+
+            if (ev._T === "LogParachuteLanding" && ev.character?.name === selectedPlayerName) {
+                icon = '🪂'; text = 'Landed on the ground';
+            }
+            else if (ev._T === "LogItemPickup" && ev.character?.name === selectedPlayerName) {
+                if (ev.item.itemId.includes("Weapon_") || ev.item.itemId.includes("Armor_") || ev.item.itemId.includes("Backpack_")) {
+                    icon = '🎒'; text = `Equipped <strong>${cleanItemName(ev.item.itemId)}</strong>`;
+                }
+            }
+            else if (ev._T === "LogVehicleEnter" && ev.character?.name === selectedPlayerName) {
+                icon = '🚙'; text = `Entered a vehicle`;
+            }
+            else if (ev._T === "LogPlayerMakeGroggy") {
+                if (ev.attacker?.name === selectedPlayerName && ev.victim?.name !== selectedPlayerName) {
+                    icon = '💥'; text = `Knocked down <strong>${ev.victim.name}</strong>`; typeClass = 'knock';
+                } else if (ev.victim?.name === selectedPlayerName) {
+                    icon = '🩸'; text = `Knocked down by <strong>${ev.attacker?.name || 'Bluezone/Fall'}</strong>`; typeClass = 'death';
+                }
+            }
+            else if (ev._T === "LogPlayerRevive") {
+                if (ev.reviver?.name === selectedPlayerName) {
+                    icon = '🤝'; text = `Revived teammate <strong>${ev.victim.name}</strong>`; typeClass = 'revive';
+                } else if (ev.victim?.name === selectedPlayerName) {
+                    icon = '❤️'; text = `Revived by <strong>${ev.reviver?.name || 'Teammate'}</strong>`; typeClass = 'revive';
+                }
+            }
+            else if (ev._T === "LogPlayerKill") {
+                if (ev.killer?.name === selectedPlayerName && ev.victim?.name !== selectedPlayerName) {
+                    icon = '🔫'; text = `Killed <strong>${ev.victim.name}</strong>`; typeClass = 'kill';
+                } else if (ev.victim?.name === selectedPlayerName) {
+                    icon = '☠️'; text = `Died to <strong>${ev.killer?.name || 'Bluezone/Fall'}</strong>`; typeClass = 'death';
+                }
+            }
+
+            if (text) {
+                eventsFound++;
+                html += `
+                    <div class="timeline-event">
+                        <div class="timeline-time">${timeStr}</div>
+                        <div class="timeline-icon">${icon}</div>
+                        <div class="timeline-content ${typeClass}">${text}</div>
+                    </div>
+                `;
             }
         });
 
-        // Sort Data
-        currentData.sort((a, b) => {
-            let valA = a[sortState.column] || 0;
-            let valB = b[sortState.column] || 0;
+        if (eventsFound === 0) html += '<div style="color:#888;">No significant events found for this player.</div>';
+        container.innerHTML = html;
+    }
 
-            if (typeof valA === 'string') valA = valA.toLowerCase();
-            if (typeof valB === 'string') valB = valB.toLowerCase();
+    // --- MAP LOGIC ---
+    const canvas = document.getElementById('match-map');
+    
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomSensitivity = 0.1;
+        const delta = e.deltaY < 0 ? 1 + zoomSensitivity : 1 - zoomSensitivity;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
 
-            if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
-            return 0;
+        let newScale = mapScale * delta;
+        newScale = Math.max(1, Math.min(newScale, 15)); 
+
+        mapOffsetX = mouseX - (mouseX - mapOffsetX) * (newScale / mapScale);
+        mapOffsetY = mouseY - (mouseY - mapOffsetY) * (newScale / mapScale);
+        mapScale = newScale;
+        renderMap();
+    });
+
+    canvas.addEventListener('mousedown', e => {
+        isDragging = true;
+        dragStartX = e.clientX - mapOffsetX;
+        dragStartY = e.clientY - mapOffsetY;
+    });
+    canvas.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        mapOffsetX = e.clientX - dragStartX;
+        mapOffsetY = e.clientY - dragStartY;
+        renderMap();
+    });
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+    function renderMap() {
+        const ctx = canvas.getContext('2d');
+        const mapInfo = MAP_DICTIONARY[currentMapName] || { size: 816000, url: null };
+        
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!mapInfo.url) return drawEmptyMap("Map image not available");
+
+        ctx.setTransform(mapScale, 0, 0, mapScale, mapOffsetX, mapOffsetY);
+
+        if (mapImageCache[currentMapName]) {
+            ctx.drawImage(mapImageCache[currentMapName], 0, 0, canvas.width, canvas.height);
+            drawTelemetryData(ctx, mapInfo.size);
+        } else {
+            const img = new Image(); img.crossOrigin = "Anonymous"; img.src = mapInfo.url;
+            img.onload = () => {
+                mapImageCache[currentMapName] = img;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                drawTelemetryData(ctx, mapInfo.size);
+            };
+        }
+    }
+
+    function drawTelemetryData(ctx, mapSizeCm) {
+        if (!telemetryData || !selectedPlayerName) return;
+
+        const toPx = (val) => (val / mapSizeCm) * canvas.width;
+        const lineWidth = 2 / mapScale;
+        const pointRadius = 5 / mapScale;
+
+        let route = []; let kills = []; let knocks = [];
+        let deathPoint = null; let startPoint = null;
+        let hasJumped = false; let lastKnownPos = null;
+
+        telemetryData.forEach(ev => {
+            if ((ev._T === "LogVehicleLeave" || ev._T === "LogParachuteLanding") && ev.character && ev.character.name === selectedPlayerName) {
+                hasJumped = true;
+            }
+
+            if (ev._T === "LogPlayerPosition" && ev.character && ev.character.name === selectedPlayerName && hasJumped) {
+                if (ev.character.location.x !== 0 && ev.character.location.y !== 0) {
+                    let pt = { x: toPx(ev.character.location.x), y: toPx(ev.character.location.y) };
+                    route.push(pt); lastKnownPos = pt;
+                    if (!startPoint) startPoint = pt;
+                }
+            }
+
+            if (ev._T === "LogPlayerMakeGroggy") {
+                if (ev.attacker && ev.attacker.name === selectedPlayerName && ev.victim && ev.victim.location) {
+                    let attackerPos = (ev.attacker.location.x !== 0) ? { x: toPx(ev.attacker.location.x), y: toPx(ev.attacker.location.y) } : lastKnownPos;
+                    let victimPos = { x: toPx(ev.victim.location.x), y: toPx(ev.victim.location.y) };
+                    if (attackerPos && victimPos) knocks.push({ attacker: attackerPos, victim: victimPos });
+                }
+            }
+
+            if (ev._T === "LogPlayerKill") {
+                if (ev.killer && ev.killer.name === selectedPlayerName && ev.victim && ev.victim.location) {
+                    let killerPos = (ev.killer.location.x !== 0) ? { x: toPx(ev.killer.location.x), y: toPx(ev.killer.location.y) } : lastKnownPos;
+                    let victimPos = { x: toPx(ev.victim.location.x), y: toPx(ev.victim.location.y) };
+                    if (killerPos && victimPos) kills.push({ killer: killerPos, victim: victimPos });
+                }
+                
+                if (ev.victim && ev.victim.name === selectedPlayerName) {
+                    if (ev.victim.location && ev.victim.location.x !== 0) deathPoint = { x: toPx(ev.victim.location.x), y: toPx(ev.victim.location.y) };
+                    else deathPoint = lastKnownPos;
+                }
+            }
         });
 
-        // Helper formatters
-        const num = (n) => typeof n === 'number' ? parseFloat(n.toFixed(1)) : (n || 0);
-        const dist = (n) => Math.round(n || 0) + "m";
-        const time = (s) => Math.floor((s||0)/60) + ":" + (Math.floor((s||0)%60)).toString().padStart(2,'0');
+        if (route.length > 0) {
+            ctx.strokeStyle = 'rgba(242, 169, 0, 0.8)'; ctx.lineWidth = lineWidth; ctx.beginPath();
+            ctx.moveTo(route[0].x, route[0].y);
+            for(let i=1; i<route.length; i++) ctx.lineTo(route[i].x, route[i].y);
+            ctx.stroke();
+        }
 
-        currentData.forEach(row => {
-            const tr = document.createElement('tr');
-            if (row.rank === 1) tr.classList.add('winner');
+        if (startPoint) {
+            ctx.fillStyle = '#00BBF9'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 / mapScale;
+            ctx.beginPath(); ctx.arc(startPoint.x, startPoint.y, pointRadius * 1.2, 0, Math.PI*2);
+            ctx.fill(); ctx.stroke();
+        }
 
-            tr.innerHTML = `
-                <td style="text-align:center;">#${row.rank}</td>
-                <td>${row.name || 'Unknown'}</td>
-                <td class="val-high">${row.kills}</td>
-                <td class="val-high">${Math.round(row.damageDealt)}</td>
-                <td>${row.assists}</td>
-                <td>${row.DBNOs}</td>
-                <td>${row.headshotKills}</td>
-                <td>${num(row.longestKill)}m</td>
-                <td>${time(row.timeSurvived)}</td>
-                <td>${row.teamKills}</td>
-                <td class="val-mid">${row.heals}</td>
-                <td class="val-mid">${row.boosts}</td>
-                <td>${row.revives}</td>
-                <td>${row.weaponsAcquired}</td>
-                <td>${row.vehicleDestroys}</td>
-                <td class="val-mid">${dist(row.walkDistance)}</td>
-                <td class="val-mid">${dist(row.rideDistance)}</td>
-                <td class="val-mid">${dist(row.swimDistance)}</td>
-                <td>${row.deathType || '-'}</td>
-            `;
-            tbody.appendChild(tr);
+        knocks.forEach(k => {
+            ctx.strokeStyle = 'rgba(255, 159, 28, 0.8)'; ctx.lineWidth = 1.5 / mapScale; ctx.setLineDash([5 / mapScale, 5 / mapScale]);
+            ctx.beginPath(); ctx.moveTo(k.attacker.x, k.attacker.y); ctx.lineTo(k.victim.x, k.victim.y); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = '#FF9F1C'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1 / mapScale;
+            ctx.beginPath(); ctx.arc(k.victim.x, k.victim.y, pointRadius * 0.8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         });
+
+        kills.forEach(k => {
+            ctx.strokeStyle = 'rgba(76, 175, 80, 0.8)'; ctx.lineWidth = 1.5 / mapScale;
+            ctx.beginPath(); ctx.moveTo(k.killer.x, k.killer.y); ctx.lineTo(k.victim.x, k.victim.y); ctx.stroke();
+            ctx.fillStyle = '#4caf50'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5 / mapScale;
+            ctx.beginPath(); ctx.arc(k.victim.x, k.victim.y, pointRadius, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        });
+
+        if (deathPoint) {
+            ctx.strokeStyle = '#ff4c4c'; ctx.lineWidth = 3 / mapScale; let s = 6 / mapScale;
+            ctx.beginPath();
+            ctx.moveTo(deathPoint.x - s, deathPoint.y - s); ctx.lineTo(deathPoint.x + s, deathPoint.y + s);
+            ctx.moveTo(deathPoint.x + s, deathPoint.y - s); ctx.lineTo(deathPoint.x - s, deathPoint.y + s);
+            ctx.stroke();
+        }
+    }
+
+    function drawEmptyMap(msg) {
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#888'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(msg, canvas.width/2, canvas.height/2);
     }
 </script>
 </body>
